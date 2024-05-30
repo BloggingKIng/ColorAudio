@@ -61,10 +61,8 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
     height = cell_height + cell_height // 2  # Additional space for text
     image = Image.new("RGB", (width, height), (255, 255, 255))  # Initialize with white background
     draw = ImageDraw.Draw(image)
-    try:
-        font = ImageFont.truetype("arial.ttf", size=cell_height // 4)
-    except IOError:
-        font = ImageFont.load_default()
+    
+    font = ImageFont.load_default(size=50)
     for i, char in enumerate(input_string):
         color = char_to_color(char, palette)
         top_left = (i * cell_width, 0)
@@ -73,7 +71,7 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
         text_width, text_height = 50,50
         text_x = top_left[0] + (cell_width - text_width) / 2
         text_y = cell_height + (cell_height // 2 - text_height) / 2
-        draw.text((text_x, text_y), char, fill=(0, 0, 0), font=font, stroke_width=1)
+        draw.text((text_x, text_y), char, fill=(0, 0, 0), font=font, stroke_width=1, font_size=50)
     return image
 
 
