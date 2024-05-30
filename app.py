@@ -81,7 +81,7 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
 def index():
     return render_template('index.html')
 
-@app.route('/upload_audio', methods=['POST'])
+@app.route('/upload', methods=['POST'])
 def upload_audio():
     if 'file' not in request.files:
         return render_template('index.html', error="No file part")
