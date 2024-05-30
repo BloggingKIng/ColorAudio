@@ -70,7 +70,7 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
         top_left = (i * cell_width, 0)
         bottom_right = ((i + 1) * cell_width, cell_height)
         draw.rectangle([top_left, bottom_right], fill=color)
-        text_width, text_height = 20,20
+        text_width, text_height = 50,50
         text_x = top_left[0] + (cell_width - text_width) / 2
         text_y = cell_height + (cell_height // 2 - text_height) / 2
         draw.text((text_x, text_y), char, fill=(0, 0, 0), font=font, stroke_width=1)
