@@ -1,6 +1,6 @@
 import matplotlib
 matplotlib.use('Agg')  # Use non-interactive backend
-
+import colorsys
 from flask import Flask, render_template, request
 import numpy as np
 import librosa
@@ -11,7 +11,6 @@ import io
 import base64
 from PIL import Image, ImageDraw, ImageFont
 import string
-import math
 
 app = Flask(__name__)
 
@@ -29,30 +28,30 @@ def split_image_into_chunks(image, chunk_size):
 
 # Function to generate color palette for characters
 def generate_color_palette():
-    chars = string.digits + string.ascii_uppercase
+    chars = string.digits + string.ascii_uppercase + '!?., '
     palette = {}
-    colors = [
-        (255, 0, 0), (0, 255, 0), (0, 0, 255),
-        (255, 255, 0), (0, 255, 255), (255, 0, 255),
-        (192, 192, 192), (128, 128, 128), (128, 0, 0),
-        (128, 128, 0), (0, 128, 0), (128, 0, 128),
-        (0, 128, 128), (0, 0, 128), (255, 165, 0),
-        (255, 20, 147), (0, 191, 255), (50, 205, 50),
-        (186, 85, 211), (188, 143, 143), (210, 105, 30),
-        (105, 105, 105), (255, 69, 0), (128, 128, 0),
-        (70, 130, 180), (154, 205, 50), (255, 140, 0),
-        (153, 50, 204), (72, 209, 204), (255, 105, 180),
-        (147, 112, 219), (123, 104, 238), (0, 250, 154),
-        (244, 164, 96), (127, 255, 0), (240, 230, 140)
-    ]
-
+    
+    # Generate distinct colors using HSL with varied lightness and saturation
+    num_colors = len(chars)
     for i, char in enumerate(chars):
-        palette[char] = colors[i % len(colors)]
+        hue = i**2 / num_colors   # Hue value changes for each character
+        lightness = 0.3 + (i % 2) * 0.4  # Alternate between two lightness levels
+        saturation = 0.8 + (i % 3) * 0.6  # Use three different saturation levels
+        rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
+        rgb = tuple(int(255 * x) for x in rgb)
+        palette[char] = rgb
+    
     return palette
-
 # Convert character to color
 def char_to_color(char, palette):
-    return palette.get(char.upper(), (255, 255, 255))  # Default to white
+    return palette.get(char.upper(), (100,100,100))  # Default to white
+
+# Convert color to character
+def color_to_char(color, palette):
+    for char, col in palette.items():
+        if col == color:
+            return char
+    return '?'
 
 # Convert string to color pattern image
 def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=200):
@@ -62,18 +61,28 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
     image = Image.new("RGB", (width, height), (255, 255, 255))  # Initialize with white background
     draw = ImageDraw.Draw(image)
     
-    font = ImageFont.load_default(size=50)
+    try:
+        font = ImageFont.truetype("arial.ttf", size=cell_height // 4)
+    except IOError:
+        font = ImageFont.load_default()
+
+    color_code = []
     for i, char in enumerate(input_string):
         color = char_to_color(char, palette)
+        color_code.append(color)
         top_left = (i * cell_width, 0)
         bottom_right = ((i + 1) * cell_width, cell_height)
         draw.rectangle([top_left, bottom_right], fill=color)
-        text_width, text_height = 50,50
+        text_width, text_height = 20,20
         text_x = top_left[0] + (cell_width - text_width) / 2
         text_y = cell_height + (cell_height // 2 - text_height) / 2
-        draw.text((text_x, text_y), char, fill=(0, 0, 0), font=font, stroke_width=1, font_size=50)
-    return image
+        draw.text((text_x, text_y), char, fill=(0, 0, 0), font=font, stroke_width=1)
+    
+    return image, color_code
 
+# Convert color code to string
+def color_code_to_string(color_code, palette):
+    return ''.join(color_to_char(tuple(color), palette) for color in color_code)
 
 @app.route('/')
 def index():
@@ -124,16 +133,37 @@ def text_to_color():
             return render_template('text_to_color.html', error="No input provided")
         
         palette = generate_color_palette()
-        image = string_to_color_pattern(input_string, palette)
-        image_chunks = split_image_into_chunks(image, chunk_size=200)  # Adjust
-                # Split the image into chunks
+        image, color_code = string_to_color_pattern(input_string, palette)
+        
         image_chunks = split_image_into_chunks(image, chunk_size=200)  # Adjust chunk size as needed
 
-        # Pass the image chunks to the template
-        return render_template('text_to_color_representation.html', image_chunks=image_chunks)
+        # Pass the image chunks and color code to the template
+        return render_template('text_to_color_representation.html', image_chunks=image_chunks, color_code=color_code)
 
-    # Render the text_to_color.html template for GET requests
     return render_template('text_to_color.html')
+
+@app.route('/color-to-text', methods=['GET', 'POST'])
+def color_to_text():
+    if request.method == 'POST':
+        if 'color_code' in request.form and request.form['color_code']:
+            color_code_input = request.form['color_code']
+            print(color_code_input.strip())
+            color_code = color_code_input.strip().strip('][').split('),')
+            cz = []
+            for x in color_code:
+                z = x.strip().strip('(').strip(')')
+                z = z.split(',')
+                u,v,w = z
+                z = (int(u),int(v),int(w))
+                cz.append(tuple(z))
+            print(cz)
+            print(color_code)
+            palette = generate_color_palette()
+            original_text = color_code_to_string(cz, palette)
+            return render_template('color_to_text.html', original_text=original_text, color_code=color_code_input)
+        else:
+            return render_template('color_to_text.html', error="No input provided")
+    return render_template('color_to_text.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

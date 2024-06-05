@@ -25,35 +25,7 @@
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container-fluid">
-          <a class="navbar-brand" href="/">Audio Converter</a>
-          <div>
-              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-              </button>
-            <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Audio to Image</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/text-to-color">Text to Color Code</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Speech to color code</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Color Code to Audio Conversion</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">Colors to Audio</a>
-                    </li>
-                    </ul>
-            </div>
-        </div>
-        </div>
-      </nav>
+    {% include 'navbar.html' %}
     <div class="container mt-5">
         <h1 class="mb-4 text-center">Color Representation of Text</h1>
         {% for chunk in image_chunks %}
@@ -62,7 +34,14 @@
         </div>
         {% endfor %}
     </div>
-    <div class="container">
+    <div class="container mt-5">
+        <h2 class="mb-4 text-center">Color Code</h2>
+        <textarea id="colorCode" class="form-control" rows="5" readonly>
+            {{ color_code }}
+        </textarea>
+    </div>
+    <div class="container mt-5">
+        <button id="copyButton" class="btn btn-primary">Copy to Clipboard</button>
         <button style="border: 0px; padding: 0px;">
             <a href="/text-to-color" class="btn btn-primary">Convert Another Text</a>
         </button>
@@ -70,5 +49,14 @@
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        document.getElementById('copyButton').addEventListener('click', function() {
+            var copyText = document.getElementById('colorCode');
+            copyText.select();
+            copyText.setSelectionRange(0, 99999); // For mobile devices
+            document.execCommand('copy');
+            alert("Copied the color code: " + copyText.value);
+        });
+    </script>
 </body>
 </html>
