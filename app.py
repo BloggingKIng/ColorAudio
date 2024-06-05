@@ -60,11 +60,8 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
     height = cell_height + cell_height // 2  # Additional space for text
     image = Image.new("RGB", (width, height), (255, 255, 255))  # Initialize with white background
     draw = ImageDraw.Draw(image)
-    
-    try:
-        font = ImageFont.truetype("arial.ttf", size=cell_height // 4)
-    except IOError:
-        font = ImageFont.load_default()
+    font = ImageFont.load_default(size=50)
+
 
     color_code = []
     for i, char in enumerate(input_string):
