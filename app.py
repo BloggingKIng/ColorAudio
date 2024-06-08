@@ -11,8 +11,24 @@ import io
 import base64
 from PIL import Image, ImageDraw, ImageFont
 import string
-
+from docx import Document
+import PyPDF2
+import pdfplumber
 app = Flask(__name__)
+
+def read_docx(file):
+    doc = Document(file)
+    full_text = []
+    for para in doc.paragraphs:
+        full_text.append(para.text)
+    return '\n'.join(full_text)
+
+def read_pdf(file):
+    full_text = []
+    with pdfplumber.open(file) as pdf:
+        for page in pdf.pages:
+            full_text.append(page.extract_text())
+    return '\n'.join(full_text)
 
 # Function to split image into chunks
 def split_image_into_chunks(image, chunk_size):
@@ -121,18 +137,29 @@ def upload_audio():
 @app.route('/text-to-color', methods=['GET', 'POST'])
 def text_to_color():
     if request.method == 'POST':
+        input_string = ""
         if 'text' in request.form and request.form['text']:
             input_string = request.form['text']
         elif 'file' in request.files and request.files['file'].filename:
             file = request.files['file']
-            input_string = file.read().decode('utf-8')
+            filename = file.filename.lower()
+            if filename.endswith('.txt'):
+                input_string = file.read().decode('utf-8')
+            elif filename.endswith('.docx'):
+                input_string = read_docx(file)
+            elif filename.endswith('.pdf'):
+                input_string = read_pdf(file)
+            else:
+                return render_template('text_to_color.html', error="Unsupported file format")
         else:
             return render_template('text_to_color.html', error="No input provided")
         
+        # Assuming generate_color_palette() and string_to_color_pattern() are defined
         palette = generate_color_palette()
         image, color_code = string_to_color_pattern(input_string, palette)
         
-        image_chunks = split_image_into_chunks(image, chunk_size=200)  # Adjust chunk size as needed
+        # Adjust chunk size as needed
+        image_chunks = split_image_into_chunks(image, chunk_size=200)  
 
         # Pass the image chunks and color code to the template
         return render_template('text_to_color_representation.html', image_chunks=image_chunks, color_code=color_code)
