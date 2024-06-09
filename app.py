@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg')  # Use non-interactive backend
+matplotlib.use('Agg') 
 import colorsys
 from flask import Flask, render_template, request
 import numpy as np
@@ -30,7 +30,6 @@ def read_pdf(file):
             full_text.append(page.extract_text())
     return '\n'.join(full_text)
 
-# Function to split image into chunks
 def split_image_into_chunks(image, chunk_size):
     width, height = image.size
     chunks = []
@@ -42,39 +41,35 @@ def split_image_into_chunks(image, chunk_size):
         chunks.append(base64.b64encode(buf.getvalue()).decode())
     return chunks
 
-# Function to generate color palette for characters
 def generate_color_palette():
     chars = string.digits + string.ascii_uppercase + '!?., '
     palette = {}
     
-    # Generate distinct colors using HSL with varied lightness and saturation
     num_colors = len(chars)
     for i, char in enumerate(chars):
-        hue = i**2 / num_colors   # Hue value changes for each character
-        lightness = 0.3 + (i % 2) * 0.4  # Alternate between two lightness levels
-        saturation = 0.8 + (i % 3) * 0.6  # Use three different saturation levels
+        hue = i**2 / num_colors   
+        lightness = 0.3 + (i % 2) * 0.4 
+        saturation = 0.8 + (i % 3) * 0.6 
         rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
         rgb = tuple(int(255 * x) for x in rgb)
         palette[char] = rgb
     
     return palette
-# Convert character to color
-def char_to_color(char, palette):
-    return palette.get(char.upper(), (100,100,100))  # Default to white
 
-# Convert color to character
+def char_to_color(char, palette):
+    return palette.get(char.upper(), (100,100,100)) 
+
 def color_to_char(color, palette):
     for char, col in palette.items():
         if col == color:
             return char
     return '?'
 
-# Convert string to color pattern image
 def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=200):
     length = len(input_string)
     width = length * cell_width
-    height = cell_height + cell_height // 2  # Additional space for text
-    image = Image.new("RGB", (width, height), (255, 255, 255))  # Initialize with white background
+    height = cell_height + cell_height // 2  
+    image = Image.new("RGB", (width, height), (255, 255, 255))  
     draw = ImageDraw.Draw(image)
     font = ImageFont.load_default(size=50)
 
@@ -93,7 +88,6 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
     
     return image, color_code
 
-# Convert color code to string
 def color_code_to_string(color_code, palette):
     return ''.join(color_to_char(tuple(color), palette) for color in color_code)
 
@@ -154,14 +148,11 @@ def text_to_color():
         else:
             return render_template('text_to_color.html', error="No input provided")
         
-        # Assuming generate_color_palette() and string_to_color_pattern() are defined
         palette = generate_color_palette()
         image, color_code = string_to_color_pattern(input_string, palette)
         
-        # Adjust chunk size as needed
         image_chunks = split_image_into_chunks(image, chunk_size=200)  
 
-        # Pass the image chunks and color code to the template
         return render_template('text_to_color_representation.html', image_chunks=image_chunks, color_code=color_code)
 
     return render_template('text_to_color.html')
