@@ -42,7 +42,7 @@ def split_image_into_chunks(image, chunk_size):
     return chunks
 
 def generate_color_palette():
-    chars = string.digits + string.ascii_uppercase + '!?., '
+    chars = string.digits + string.ascii_lowercase + string.ascii_uppercase + '!?., '
     palette = {}
     
     num_colors = len(chars)
@@ -53,11 +53,11 @@ def generate_color_palette():
         rgb = colorsys.hls_to_rgb(hue, lightness, saturation)
         rgb = tuple(int(255 * x) for x in rgb)
         palette[char] = rgb
-    
+    palette['A'] = (310,210,200)
     return palette
 
 def char_to_color(char, palette):
-    return palette.get(char.upper(), (100,100,100)) 
+    return palette.get(char, (100,100,100)) 
 
 def color_to_char(color, palette):
     for char, col in palette.items():
