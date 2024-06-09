@@ -42,7 +42,7 @@ def split_image_into_chunks(image, chunk_size):
     return chunks
 
 def generate_color_palette():
-    chars = string.digits + string.ascii_uppercase + '!?., '
+    chars = string.digits + string.ascii_uppercase + '!?., \n'
     palette = {}
     
     num_colors = len(chars)
